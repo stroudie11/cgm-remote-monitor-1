@@ -14,20 +14,9 @@ var env = {
   settings: require('./lib/settings')()
 };
 
-var shadowEnv;
-
 // Module to constrain all config and environment parsing to one spot.
 // See README.md for info about all the supported ENV VARs
 function config ( ) {
-
-  // Assume users will typo whitespaces into keys and values
-
-  shadowEnv = {};
-
-  Object.keys(process.env).forEach((key, index) => {
-    shadowEnv[_trim(key)] = _trim(process.env[key]);
-  });
-
   env.PORT = readENV('PORT', 1337);
   env.HOSTNAME = readENV('HOSTNAME', null);
   env.IMPORT_CONFIG = readENV('IMPORT_CONFIG', null);
@@ -133,7 +122,7 @@ function updateSettings() {
   });
 
   //should always find extended settings last
-  env.extendedSettings = findExtendedSettings(shadowEnv);
+  env.extendedSettings = findExtendedSettings(process.env);
 
   if (!readENVTruthy('TREATMENTS_AUTH', true)) {
     env.settings.authDefaultRoles = env.settings.authDefaultRoles || "";
@@ -143,10 +132,10 @@ function updateSettings() {
 
 function readENV(varName, defaultValue) {
   //for some reason Azure uses this prefix, maybe there is a good reason
-  var value = shadowEnv['CUSTOMCONNSTR_' + varName]
-    || shadowEnv['CUSTOMCONNSTR_' + varName.toLowerCase()]
-    || shadowEnv[varName]
-    || shadowEnv[varName.toLowerCase()];
+  var value = process.env['CUSTOMCONNSTR_' + varName]
+    || process.env['CUSTOMCONNSTR_' + varName.toLowerCase()]
+    || process.env[varName]
+    || process.env[varName.toLowerCase()];
 
   if (varName == 'DISPLAY_UNITS') {
     if (value && value.toLowerCase().includes('mmol')) {
@@ -173,7 +162,7 @@ function findExtendedSettings (envs) {
   extended.devicestatus = {};
   extended.devicestatus.advanced = true;
   extended.devicestatus.days = 1;
-  if(shadowEnv['DEVICESTATUS_DAYS'] && shadowEnv['DEVICESTATUS_DAYS'] == '2') extended.devicestatus.days = 1;
+  if(process.env['DEVICESTATUS_DAYS'] && process.env['DEVICESTATUS_DAYS'] == '2') extended.devicestatus.days = 1;
 
   function normalizeEnv (key) {
     return key.toUpperCase().replace('CUSTOMCONNSTR_', '');
